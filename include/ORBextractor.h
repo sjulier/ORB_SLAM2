@@ -29,6 +29,29 @@
 namespace ORB_SLAM2
 {
 
+// More Conservative on Non-Movable Labels
+//const int IdxMove[] = {5, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 19, 21, 22};
+//const int IdxNon[] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23};
+
+// Less Conservative on Non-Movable Labels
+const int IdxMove[] = {5, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33};
+const int IdxNon[] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23, 19, 21, 22};
+
+class KeyPointLabeled : public cv::KeyPoint
+{
+public:
+    KeyPointLabeled();
+    KeyPointLabeled(const KeyPointLabeled &keyPointLabeled);
+    KeyPointLabeled(cv::Point2f _pt, float _size, float _angle, float _response, int _octave, int _class_id);
+    KeyPointLabeled(float x, float y, float _size, float _angle, float _response, int _octave, int _class_id);
+    void SetLabel(int label);
+    
+    ~KeyPointLabeled();
+    int mnLabel;
+    bool mbMovable = 1;
+    bool mbMoving = 1;
+};
+
 class ExtractorNode
 {
 public:
@@ -36,7 +59,7 @@ public:
 
     void DivideNode(ExtractorNode &n1, ExtractorNode &n2, ExtractorNode &n3, ExtractorNode &n4);
 
-    std::vector<cv::KeyPoint> vKeys;
+    std::vector<KeyPointLabeled> vKeys;
     cv::Point2i UL, UR, BL, BR;
     std::list<ExtractorNode>::iterator lit;
     bool bNoMore;
@@ -57,7 +80,7 @@ public:
     // ORB are dispersed on the image using an octree.
     // Mask is ignored in the current implementation.
     void operator()( cv::InputArray image, cv::InputArray mask,
-      std::vector<cv::KeyPoint>& keypoints,
+      std::vector<KeyPointLabeled>& keypoints,
       cv::OutputArray descriptors);
 
     int inline GetLevels(){
@@ -87,11 +110,11 @@ public:
 protected:
 
     void ComputePyramid(cv::Mat image);
-    void ComputeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint> >& allKeypoints);    
-    std::vector<cv::KeyPoint> DistributeOctTree(const std::vector<cv::KeyPoint>& vToDistributeKeys, const int &minX,
+    void ComputeKeyPointsOctTree(std::vector<std::vector<KeyPointLabeled> >& allKeypoints);    
+    std::vector<KeyPointLabeled> DistributeOctTree(const std::vector<KeyPointLabeled>& vToDistributeKeys, const int &minX,
                                            const int &maxX, const int &minY, const int &maxY, const int &nFeatures, const int &level);
 
-    void ComputeKeyPointsOld(std::vector<std::vector<cv::KeyPoint> >& allKeypoints);
+    //void ComputeKeyPointsOld(std::vector<std::vector<KeyPointLabeled> >& allKeypoints);
     std::vector<cv::Point> pattern;
 
     int nfeatures;

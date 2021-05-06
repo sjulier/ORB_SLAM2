@@ -56,6 +56,7 @@ public:
 
     // Bag of Words Representation
     void ComputeBoW();
+    void ComputeBoWNon();
 
     // Covisibility graph functions
     void AddConnection(KeyFrame* pKF, const int &weight);
@@ -115,7 +116,7 @@ public:
     static bool lId(KeyFrame* pKF1, KeyFrame* pKF2){
         return pKF1->mnId<pKF2->mnId;
     }
-
+    
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:
@@ -160,8 +161,8 @@ public:
     const int N;
 
     // KeyPoints, stereo coordinate and descriptors (all associated by an index)
-    const std::vector<cv::KeyPoint> mvKeys;
-    const std::vector<cv::KeyPoint> mvKeysUn;
+    const std::vector<KeyPointLabeled> mvKeys;
+    const std::vector<KeyPointLabeled> mvKeysUn;
     const std::vector<float> mvuRight; // negative value for monocular points
     const std::vector<float> mvDepth; // negative value for monocular points
     const cv::Mat mDescriptors;
@@ -169,6 +170,8 @@ public:
     //BoW
     DBoW2::BowVector mBowVec;
     DBoW2::FeatureVector mFeatVec;
+    DBoW2::BowVector mBowVecNon;
+    DBoW2::FeatureVector mFeatVecNon;
 
     // Pose relative to parent (this is computed when bad flag is activated)
     cv::Mat mTcp;

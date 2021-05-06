@@ -24,6 +24,7 @@
 #include<fstream>
 #include<iomanip>
 #include<chrono>
+#include<stdio.h>
 
 #include<opencv2/core/core.hpp>
 
@@ -34,11 +35,14 @@ using namespace std;
 void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
                 vector<string> &vstrImageRight, vector<double> &vTimestamps);
 
+void LoadLabels(const string &strPathToLabel, vector<string> &vstrLabelLeft,
+                vector<string> &vstrLabelRight, vector<double> &vTimestamps);
+
 int main(int argc, char **argv)
 {
-    if(argc != 4)
+    if(argc != 5)
     {
-        cerr << endl << "Usage: ./stereo_kitti path_to_vocabulary path_to_settings path_to_sequence" << endl;
+        cerr << endl << "Usage: ./stereo_kitti path_to_vocabulary path_to_settings path_to_sequence path_to_label" << endl;
         return 1;
     }
 
@@ -47,8 +51,18 @@ int main(int argc, char **argv)
     vector<string> vstrImageRight;
     vector<double> vTimestamps;
     LoadImages(string(argv[3]), vstrImageLeft, vstrImageRight, vTimestamps);
+    vector<string> vstrLabelLeft;
+    vector<string> vstrLabelRight;
+    LoadLabels(string(argv[4]), vstrLabelLeft, vstrLabelRight, vTimestamps);
 
     const int nImages = vstrImageLeft.size();
+    const int nLabels = vstrLabelLeft.size();
+    
+    if (nLabels != nImages)
+    {
+        cerr << endl << "Images and Labels disagree with each other. " << endl;
+        return 1;
+    }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::STEREO,true);
@@ -63,11 +77,16 @@ int main(int argc, char **argv)
 
     // Main loop
     cv::Mat imLeft, imRight;
+    cv::Mat labelLeft, labelRight;
     for(int ni=0; ni<nImages; ni++)
     {
         // Read left and right images from file
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
         imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
+        // Read left and right labels frome file
+        labelLeft = cv::imread(vstrLabelLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
+        labelRight = cv::imread(vstrLabelRight[ni],CV_LOAD_IMAGE_UNCHANGED);
+        //getchar();
         double tframe = vTimestamps[ni];
 
         if(imLeft.empty())
@@ -76,7 +95,14 @@ int main(int argc, char **argv)
                  << string(vstrImageLeft[ni]) << endl;
             return 1;
         }
-
+        
+        if(labelLeft.empty())
+        {
+            cerr << endl << "Failed to load label at: "
+                 << string(vstrLabelLeft[ni]) << endl;
+            return 1;
+        }
+        
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #else
@@ -84,7 +110,7 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the images to the SLAM system
-        SLAM.TrackStereo(imLeft,imRight,tframe);
+        SLAM.TrackStereo(imLeft,imRight,labelLeft,labelRight,tframe);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -162,3 +188,24 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
         vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
     }
 }
+
+void LoadLabels(const string &strPathToLabel, vector<string> &vstrLabelLeft,
+                vector<string> &vstrLabelRight, vector<double> &vTimestamps)
+{
+    string strPrefixLeft = strPathToLabel + "/image_2/";
+    string strPrefixRight = strPathToLabel + "/image_3/";
+
+    const int nTimes = vTimestamps.size();
+    vstrLabelLeft.resize(nTimes);
+    vstrLabelRight.resize(nTimes);
+
+    for(int i=0; i<nTimes; i++)
+    {
+        stringstream ss;
+        ss << setfill('0') << setw(6) << i;
+        vstrLabelLeft[i] = strPrefixLeft + ss.str() + ".png";
+        vstrLabelRight[i] = strPrefixRight + ss.str() + ".png";
+    }
+}
+
+

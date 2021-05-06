@@ -23,6 +23,8 @@
 #include "KeyFrame.h"
 #include <pangolin/pangolin.h>
 #include <mutex>
+#include <iostream>
+#include <string>
 
 namespace ORB_SLAM2
 {
@@ -53,31 +55,67 @@ void MapDrawer::DrawMapPoints()
 
     glPointSize(mPointSize);
     glBegin(GL_POINTS);
-    glColor3f(0.0,0.0,0.0);
-
+    
+    int nUnlabelled = 0;
     for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
     {
+        if (vpMPs[i]->mnLabel != 0){
+            glColor3f(0.0,0.0,0.0);
+        } else {
+            nUnlabelled ++;
+            glColor3f(1.0,0.0,1.0);
+        }
         if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
             continue;
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
     }
     glEnd();
-
+    if (nUnlabelled){
+        cout << "In all " << vpMPs.size() << " points there are " << nUnlabelled << " unlabelled MPs. " << endl;
+    }
+    
     glPointSize(mPointSize);
     glBegin(GL_POINTS);
-    glColor3f(1.0,0.0,0.0);
 
+    nUnlabelled = 0;
     for(set<MapPoint*>::iterator sit=spRefMPs.begin(), send=spRefMPs.end(); sit!=send; sit++)
     {
+        float r, g, b;
+        if ((*sit)->mnLabel != -1){
+            r = (float)mnLabelColour[(*sit)->mnLabel][0]/255.0;
+            g = (float)mnLabelColour[(*sit)->mnLabel][1]/255.0;
+            b = (float)mnLabelColour[(*sit)->mnLabel][2]/255.0;
+        } else {
+            r = (float)mnLabelColour[34][0]/255.0;
+            g = (float)mnLabelColour[34][1]/255.0;
+            b = (float)mnLabelColour[34][2]/255.0;
+        }
+        if ((*sit)->mbMovable){
+            r = 1.0; 
+            g = 0.0; 
+            b = 0.0;
+        } else {
+            r = 0.0; 
+            g = 1.0; 
+            b = 0.0;
+        }
+                
+        glColor3f(r,g,b);
+        if ((*sit)->mnLabel == 0){
+            nUnlabelled ++;
+        }
         if((*sit)->isBad())
             continue;
         cv::Mat pos = (*sit)->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
 
     }
-
     glEnd();
+    if (nUnlabelled){
+        cout << "In Reference " << vpRefMPs.size() << " points there are " << nUnlabelled << " unlabelled MPs. " << endl;
+    }
+        
 }
 
 void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
@@ -191,7 +229,7 @@ void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix &Twc)
 #endif
 
     glLineWidth(mCameraLineWidth);
-    glColor3f(0.0f,1.0f,0.0f);
+    glColor3f(1.0f,0.0f,0.0f);
     glBegin(GL_LINES);
     glVertex3f(0,0,0);
     glVertex3f(w,h,z);

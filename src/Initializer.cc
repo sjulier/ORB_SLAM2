@@ -25,7 +25,7 @@
 #include "Optimizer.h"
 #include "ORBmatcher.h"
 
-#include<thread>
+#include <thread>
 
 namespace ORB_SLAM2
 {
@@ -338,8 +338,8 @@ float Initializer::CheckHomography(const cv::Mat &H21, const cv::Mat &H12, vecto
     {
         bool bIn = true;
 
-        const cv::KeyPoint &kp1 = mvKeys1[mvMatches12[i].first];
-        const cv::KeyPoint &kp2 = mvKeys2[mvMatches12[i].second];
+        const KeyPointLabeled &kp1 = mvKeys1[mvMatches12[i].first];
+        const KeyPointLabeled &kp2 = mvKeys2[mvMatches12[i].second];
 
         const float u1 = kp1.pt.x;
         const float v1 = kp1.pt.y;
@@ -414,8 +414,8 @@ float Initializer::CheckFundamental(const cv::Mat &F21, vector<bool> &vbMatchesI
     {
         bool bIn = true;
 
-        const cv::KeyPoint &kp1 = mvKeys1[mvMatches12[i].first];
-        const cv::KeyPoint &kp2 = mvKeys2[mvMatches12[i].second];
+        const KeyPointLabeled &kp1 = mvKeys1[mvMatches12[i].first];
+        const KeyPointLabeled &kp2 = mvKeys2[mvMatches12[i].second];
 
         const float u1 = kp1.pt.x;
         const float v1 = kp1.pt.y;
@@ -731,7 +731,7 @@ bool Initializer::ReconstructH(vector<bool> &vbMatchesInliers, cv::Mat &H21, cv:
     return false;
 }
 
-void Initializer::Triangulate(const cv::KeyPoint &kp1, const cv::KeyPoint &kp2, const cv::Mat &P1, const cv::Mat &P2, cv::Mat &x3D)
+void Initializer::Triangulate(const KeyPointLabeled &kp1, const KeyPointLabeled &kp2, const cv::Mat &P1, const cv::Mat &P2, cv::Mat &x3D)
 {
     cv::Mat A(4,4,CV_32F);
 
@@ -746,7 +746,7 @@ void Initializer::Triangulate(const cv::KeyPoint &kp1, const cv::KeyPoint &kp2, 
     x3D = x3D.rowRange(0,3)/x3D.at<float>(3);
 }
 
-void Initializer::Normalize(const vector<cv::KeyPoint> &vKeys, vector<cv::Point2f> &vNormalizedPoints, cv::Mat &T)
+void Initializer::Normalize(const vector<KeyPointLabeled> &vKeys, vector<cv::Point2f> &vNormalizedPoints, cv::Mat &T)
 {
     float meanX = 0;
     float meanY = 0;
@@ -795,7 +795,7 @@ void Initializer::Normalize(const vector<cv::KeyPoint> &vKeys, vector<cv::Point2
 }
 
 
-int Initializer::CheckRT(const cv::Mat &R, const cv::Mat &t, const vector<cv::KeyPoint> &vKeys1, const vector<cv::KeyPoint> &vKeys2,
+int Initializer::CheckRT(const cv::Mat &R, const cv::Mat &t, const vector<KeyPointLabeled> &vKeys1, const vector<KeyPointLabeled> &vKeys2,
                        const vector<Match> &vMatches12, vector<bool> &vbMatchesInliers,
                        const cv::Mat &K, vector<cv::Point3f> &vP3D, float th2, vector<bool> &vbGood, float &parallax)
 {
@@ -832,8 +832,8 @@ int Initializer::CheckRT(const cv::Mat &R, const cv::Mat &t, const vector<cv::Ke
         if(!vbMatchesInliers[i])
             continue;
 
-        const cv::KeyPoint &kp1 = vKeys1[vMatches12[i].first];
-        const cv::KeyPoint &kp2 = vKeys2[vMatches12[i].second];
+        const KeyPointLabeled &kp1 = vKeys1[vMatches12[i].first];
+        const KeyPointLabeled &kp2 = vKeys2[vMatches12[i].second];
         cv::Mat p3dC1;
 
         Triangulate(kp1,kp2,P1,P2,p3dC1);

@@ -23,7 +23,7 @@
 #include "ORBmatcher.h"
 #include "Optimizer.h"
 
-#include<mutex>
+#include <mutex>
 
 namespace ORB_SLAM2
 {
@@ -432,6 +432,7 @@ void LocalMapping::CreateNewMapPoints()
 
             // Triangulation is succesfull
             MapPoint* pMP = new MapPoint(x3D,mpCurrentKeyFrame,mpMap);
+            pMP->SetLabel(mpCurrentKeyFrame->mvKeysUn[idx1].mnLabel, mpCurrentKeyFrame->mvKeysUn[idx1].mbMovable, mpCurrentKeyFrame->mvKeysUn[idx1].mbMoving);
 
             pMP->AddObservation(mpCurrentKeyFrame,idx1);            
             pMP->AddObservation(pKF2,idx2);

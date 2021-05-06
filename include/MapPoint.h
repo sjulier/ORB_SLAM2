@@ -21,12 +21,13 @@
 #ifndef MAPPOINT_H
 #define MAPPOINT_H
 
-#include"KeyFrame.h"
-#include"Frame.h"
-#include"Map.h"
+#include "KeyFrame.h"
+#include "Frame.h"
+#include "Map.h"
 
-#include<opencv2/core/core.hpp>
-#include<mutex>
+#include <opencv2/core/core.hpp>
+#include <mutex>
+#include <string>
 
 namespace ORB_SLAM2
 {
@@ -108,7 +109,11 @@ public:
     long unsigned int mnCorrectedReference;    
     cv::Mat mPosGBA;
     long unsigned int mnBAGlobalForKF;
-
+    
+    int mnLabel = 0;
+    bool mbMovable = 1;
+    bool mbMoving = 1;
+    void SetLabel(int label, bool movable, bool moving);
 
     static std::mutex mGlobalMutex;
 

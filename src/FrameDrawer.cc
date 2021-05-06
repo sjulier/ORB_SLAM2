@@ -23,8 +23,9 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <iostream>
 
-#include<mutex>
+#include <mutex>
 
 namespace ORB_SLAM2
 {
@@ -38,9 +39,9 @@ FrameDrawer::FrameDrawer(Map* pMap):mpMap(pMap)
 cv::Mat FrameDrawer::DrawFrame()
 {
     cv::Mat im;
-    vector<cv::KeyPoint> vIniKeys; // Initialization: KeyPoints in reference frame
+    vector<KeyPointLabeled> vIniKeys; // Initialization: KeyPoints in reference frame
     vector<int> vMatches; // Initialization: correspondeces with reference keypoints
-    vector<cv::KeyPoint> vCurrentKeys; // KeyPoints in current frame
+    vector<KeyPointLabeled> vCurrentKeys; // KeyPoints in current frame
     vector<bool> vbVO, vbMap; // Tracked MapPoints in current frame
     int state; // Tracking state
 
@@ -90,29 +91,49 @@ cv::Mat FrameDrawer::DrawFrame()
     {
         mnTracked=0;
         mnTrackedVO=0;
-        const float r = 5;
+        const float radi = 5;
         const int n = vCurrentKeys.size();
         for(int i=0;i<n;i++)
         {
             if(vbVO[i] || vbMap[i])
             {
                 cv::Point2f pt1,pt2;
-                pt1.x=vCurrentKeys[i].pt.x-r;
-                pt1.y=vCurrentKeys[i].pt.y-r;
-                pt2.x=vCurrentKeys[i].pt.x+r;
-                pt2.y=vCurrentKeys[i].pt.y+r;
+                pt1.x=vCurrentKeys[i].pt.x-radi;
+                pt1.y=vCurrentKeys[i].pt.y-radi;
+                pt2.x=vCurrentKeys[i].pt.x+radi;
+                pt2.y=vCurrentKeys[i].pt.y+radi;
 
                 // This is a match to a MapPoint in the map
+                int r, g, b;
+                if (vCurrentKeys[i].mnLabel != -1){
+                    r = mnLabelColour[vCurrentKeys[i].mnLabel][0];
+                    g = mnLabelColour[vCurrentKeys[i].mnLabel][1];
+                    b = mnLabelColour[vCurrentKeys[i].mnLabel][2];
+                } else {
+                    r = mnLabelColour[34][0];
+                    g = mnLabelColour[34][1];
+                    b = mnLabelColour[34][2];                    
+                }
+                if (vCurrentKeys[i].mbMovable){
+                    r = 255; 
+                    g = 0; 
+                    b = 0;
+                } else {
+                    r = 0; 
+                    g = 255; 
+                    b = 0;
+                }
+                
                 if(vbMap[i])
                 {
-                    cv::rectangle(im,pt1,pt2,cv::Scalar(0,255,0));
-                    cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(0,255,0),-1);
+                    cv::rectangle(im,pt1,pt2,cv::Scalar(b,g,r));
+                    cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(b,g,r),-1);
                     mnTracked++;
                 }
                 else // This is match to a "visual odometry" MapPoint created in the last frame
                 {
-                    cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,0));
-                    cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,0),-1);
+                    cv::rectangle(im,pt1,pt2,cv::Scalar(b,g,r));
+                    cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(b,g,r),-1);
                     mnTrackedVO++;
                 }
             }

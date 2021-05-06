@@ -34,6 +34,19 @@ std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat &Descriptors)
     return vDesc;
 }
 
+std::vector<cv::Mat> Converter::toNonMovableDescriptorVector(const cv::Mat &Descriptors, std::vector<int> &idxMove)
+{
+    std::vector<cv::Mat> vDesc;
+    vDesc.reserve(Descriptors.rows);
+    for (int j=0;j<Descriptors.rows;j++)
+    {
+        if (std::find(idxMove.begin(), idxMove.end(), j) == idxMove.end()){
+            vDesc.push_back(Descriptors.row(j));
+        }
+    }
+    return vDesc;
+}
+
 g2o::SE3Quat Converter::toSE3Quat(const cv::Mat &cvT)
 {
     Eigen::Matrix<double,3,3> R;

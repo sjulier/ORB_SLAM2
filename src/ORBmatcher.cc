@@ -137,7 +137,7 @@ float ORBmatcher::RadiusByViewingCos(const float &viewCos)
 }
 
 
-bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoint &kp2,const cv::Mat &F12,const KeyFrame* pKF2)
+bool ORBmatcher::CheckDistEpipolarLine(const KeyPointLabeled &kp1,const KeyPointLabeled &kp2,const cv::Mat &F12,const KeyFrame* pKF2)
 {
     // Epipolar line in second image l = x1'F12 = [a b c]
     const float a = kp1.pt.x*F12.at<float>(0,0)+kp1.pt.y*F12.at<float>(1,0)+F12.at<float>(2,0);
@@ -231,7 +231,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
                     {
                         vpMapPointMatches[bestIdxF]=pMP;
 
-                        const cv::KeyPoint &kp = pKF->mvKeysUn[realIdxKF];
+                        const KeyPointLabeled &kp = pKF->mvKeysUn[realIdxKF];
 
                         if(mbCheckOrientation)
                         {
@@ -417,7 +417,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
 
     for(size_t i1=0, iend1=F1.mvKeysUn.size(); i1<iend1; i1++)
     {
-        cv::KeyPoint kp1 = F1.mvKeysUn[i1];
+        KeyPointLabeled kp1 = F1.mvKeysUn[i1];
         int level1 = kp1.octave;
         if(level1>0)
             continue;
@@ -521,12 +521,12 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
 
 int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &vpMatches12)
 {
-    const vector<cv::KeyPoint> &vKeysUn1 = pKF1->mvKeysUn;
+    const vector<KeyPointLabeled> &vKeysUn1 = pKF1->mvKeysUn;
     const DBoW2::FeatureVector &vFeatVec1 = pKF1->mFeatVec;
     const vector<MapPoint*> vpMapPoints1 = pKF1->GetMapPointMatches();
     const cv::Mat &Descriptors1 = pKF1->mDescriptors;
 
-    const vector<cv::KeyPoint> &vKeysUn2 = pKF2->mvKeysUn;
+    const vector<KeyPointLabeled> &vKeysUn2 = pKF2->mvKeysUn;
     const DBoW2::FeatureVector &vFeatVec2 = pKF2->mFeatVec;
     const vector<MapPoint*> vpMapPoints2 = pKF2->GetMapPointMatches();
     const cv::Mat &Descriptors2 = pKF2->mDescriptors;
@@ -708,7 +708,7 @@ int ORBmatcher::SearchForTriangulation(KeyFrame *pKF1, KeyFrame *pKF2, cv::Mat F
                     if(!bStereo1)
                         continue;
                 
-                const cv::KeyPoint &kp1 = pKF1->mvKeysUn[idx1];
+                const KeyPointLabeled &kp1 = pKF1->mvKeysUn[idx1];
                 
                 const cv::Mat &d1 = pKF1->mDescriptors.row(idx1);
                 
@@ -738,7 +738,7 @@ int ORBmatcher::SearchForTriangulation(KeyFrame *pKF1, KeyFrame *pKF2, cv::Mat F
                     if(dist>TH_LOW || dist>bestDist)
                         continue;
 
-                    const cv::KeyPoint &kp2 = pKF2->mvKeysUn[idx2];
+                    const KeyPointLabeled &kp2 = pKF2->mvKeysUn[idx2];
 
                     if(!bStereo1 && !bStereo2)
                     {
@@ -757,7 +757,7 @@ int ORBmatcher::SearchForTriangulation(KeyFrame *pKF1, KeyFrame *pKF2, cv::Mat F
                 
                 if(bestIdx2>=0)
                 {
-                    const cv::KeyPoint &kp2 = pKF2->mvKeysUn[bestIdx2];
+                    const KeyPointLabeled &kp2 = pKF2->mvKeysUn[bestIdx2];
                     vMatches12[idx1]=bestIdx2;
                     nmatches++;
 
@@ -904,7 +904,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
         {
             const size_t idx = *vit;
 
-            const cv::KeyPoint &kp = pKF->mvKeysUn[idx];
+            const KeyPointLabeled &kp = pKF->mvKeysUn[idx];
 
             const int &kpLevel= kp.octave;
 
@@ -1202,7 +1202,7 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
         {
             const size_t idx = *vit;
 
-            const cv::KeyPoint &kp = pKF2->mvKeysUn[idx];
+            const KeyPointLabeled &kp = pKF2->mvKeysUn[idx];
 
             if(kp.octave<nPredictedLevel-1 || kp.octave>nPredictedLevel)
                 continue;
@@ -1282,7 +1282,7 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
         {
             const size_t idx = *vit;
 
-            const cv::KeyPoint &kp = pKF1->mvKeysUn[idx];
+            const KeyPointLabeled &kp = pKF1->mvKeysUn[idx];
 
             if(kp.octave<nPredictedLevel-1 || kp.octave>nPredictedLevel)
                 continue;

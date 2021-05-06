@@ -31,14 +31,17 @@
 
 using namespace std;
 
-void LoadImages(const string &strSequence, vector<string> &vstrImageFilenames,
+void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilenames,
+                vector<double> &vTimestamps);
+
+void LoadLabels(const string &strPathToLabel, vector<string> &vstrLabel,
                 vector<double> &vTimestamps);
 
 int main(int argc, char **argv)
 {
-    if(argc != 4)
+    if(argc != 5)
     {
-        cerr << endl << "Usage: ./mono_kitti path_to_vocabulary path_to_settings path_to_sequence" << endl;
+        cerr << endl << "Usage: ./mono_kitti path_to_vocabulary path_to_settings path_to_sequence path_to_label" << endl;
         return 1;
     }
 
@@ -46,8 +49,17 @@ int main(int argc, char **argv)
     vector<string> vstrImageFilenames;
     vector<double> vTimestamps;
     LoadImages(string(argv[3]), vstrImageFilenames, vTimestamps);
+    vector<string> vstrLabel;
+    LoadLabels(string(argv[4]), vstrLabel, vTimestamps);
 
     int nImages = vstrImageFilenames.size();
+    int nLabels = vstrLabel.size();
+    
+    if (nLabels != nImages)
+    {
+        cerr << endl << "Images and Labels disagree with each other. " << endl;
+        return 1;
+    }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
@@ -62,15 +74,24 @@ int main(int argc, char **argv)
 
     // Main loop
     cv::Mat im;
+    cv::Mat label;
     for(int ni=0; ni<nImages; ni++)
     {
         // Read image from file
         im = cv::imread(vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
+        // Read left and right labels frome file
+        label = cv::imread(vstrLabel[ni],CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
 
         if(im.empty())
         {
             cerr << endl << "Failed to load image at: " << vstrImageFilenames[ni] << endl;
+            return 1;
+        }
+        
+        if(label.empty())
+        {
+            cerr << endl << "Failed to load label at: " << string(vstrLabel[ni]) << endl;
             return 1;
         }
 
@@ -81,7 +102,7 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(im,tframe);
+        SLAM.TrackMonocular(im,label,tframe);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -155,3 +176,20 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilena
         vstrImageFilenames[i] = strPrefixLeft + ss.str() + ".png";
     }
 }
+
+void LoadLabels(const string &strPathToLabel, vector<string> &vstrLabel, vector<double> &vTimestamps)
+{
+    string strPrefixLeft = strPathToLabel + "/image_2/";
+
+    const int nTimes = vTimestamps.size();
+    vstrLabel.resize(nTimes);
+
+    for(int i=0; i<nTimes; i++)
+    {
+        stringstream ss;
+        ss << setfill('0') << setw(6) << i;
+        vstrLabel[i] = strPrefixLeft + ss.str() + ".png";
+    }
+}
+
+

@@ -23,6 +23,9 @@
 #include "ORBmatcher.h"
 #include <thread>
 
+#include <iostream>
+#include <string>
+
 namespace ORB_SLAM2
 {
 
@@ -58,7 +61,7 @@ Frame::Frame(const Frame &frame)
 }
 
 
-Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, ORBextractor* extractorLeft, ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
+Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const cv::Mat &labelLeft, const cv::Mat &labelRight, const double &timeStamp, ORBextractor* extractorLeft, ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractorLeft),mpORBextractorRight(extractorRight), mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
      mpReferenceKF(static_cast<KeyFrame*>(NULL))
 {
@@ -81,10 +84,30 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
     threadRight.join();
 
     N = mvKeys.size();
-
+    
+    //cout << "mKeys size " << mvKeys.size() << endl;
+    //cout << "mKeysRight size " << mvKeysRight.size() << endl;
+    //cout << "mKeysUn size " << mvKeysUn.size() << endl; // always 0 because it is redundant in stereo
+    
     if(mvKeys.empty())
         return;
-
+    
+    for (int iKP = 0; iKP < N; iKP++){
+        int x = int(mvKeys[iKP].pt.x + 0.5);
+        int y = int(mvKeys[iKP].pt.y + 0.5);
+        if (x > mnMaxX){
+            x = mnMaxX;
+        } else if (x < mnMinX){
+            x = mnMinX;
+        }
+        if (y > mnMaxY){
+            y = mnMaxY;
+        } else if (y < mnMinY){
+            y = mnMinY;
+        }
+        mvKeys[iKP].SetLabel(labelLeft.at<uchar>(y, x));
+    }
+    
     UndistortKeyPoints();
 
     ComputeStereoMatches();
@@ -139,7 +162,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 
     if(mvKeys.empty())
         return;
-
+    
     UndistortKeyPoints();
 
     ComputeStereoFromRGBD(imDepth);
@@ -171,7 +194,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 }
 
 
-Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
+Frame::Frame(const cv::Mat &imGray, const cv::Mat &label, int tmp, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
 {
@@ -195,6 +218,22 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     if(mvKeys.empty())
         return;
 
+    for (int iKP = 0; iKP < N; iKP++){
+        int x = int(mvKeys[iKP].pt.x + 0.5);
+        int y = int(mvKeys[iKP].pt.y + 0.5);
+        if (x > mnMaxX){
+            x = mnMaxX;
+        } else if (x < mnMinX){
+            x = mnMinX;
+        }
+        if (y > mnMaxY){
+            y = mnMaxY;
+        } else if (y < mnMinY){
+            y = mnMinY;
+        }
+        mvKeys[iKP].SetLabel(label.at<uchar>(y, x));
+    }
+    
     UndistortKeyPoints();
 
     // Set no stereo information
@@ -426,7 +465,7 @@ void Frame::UndistortKeyPoints()
     mvKeysUn.resize(N);
     for(int i=0; i<N; i++)
     {
-        cv::KeyPoint kp = mvKeys[i];
+        KeyPointLabeled kp = mvKeys[i];
         kp.pt.x=mat.at<float>(i,0);
         kp.pt.y=mat.at<float>(i,1);
         mvKeysUn[i]=kp;
@@ -680,3 +719,6 @@ cv::Mat Frame::UnprojectStereo(const int &i)
 }
 
 } //namespace ORB_SLAM
+
+
+

@@ -22,6 +22,7 @@
 #include <pangolin/pangolin.h>
 
 #include <mutex>
+#include <string.h>
 
 namespace ORB_SLAM2
 {
@@ -92,6 +93,7 @@ void Viewer::Run()
     bool bFollow = true;
     bool bLocalizationMode = false;
 
+    int nFrameId = 0;
     while(1)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -136,6 +138,11 @@ void Viewer::Run()
 
         cv::Mat im = mpFrameDrawer->DrawFrame();
         cv::imshow("ORB-SLAM2: Current Frame",im);
+        
+//        nFrameId ++;
+//        std::string FileName = "demo/"+std::string(6-std::to_string(nFrameId).length(), '0')+std::to_string(nFrameId)+".png";
+//        cv::imwrite(FileName, im);
+        
         cv::waitKey(mT);
 
         if(menuReset)

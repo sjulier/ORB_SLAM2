@@ -21,7 +21,8 @@
 #include "KeyFrame.h"
 #include "Converter.h"
 #include "ORBmatcher.h"
-#include<mutex>
+#include <mutex>
+#include <iostream>
 
 namespace ORB_SLAM2
 {
@@ -64,6 +65,25 @@ void KeyFrame::ComputeBoW()
         // Feature vector associate features with nodes in the 4th level (from leaves up)
         // We assume the vocabulary tree has 6 levels, change the 4 otherwise
         mpORBvocabulary->transform(vCurrentDesc,mBowVec,mFeatVec,4);
+    }
+}
+
+void KeyFrame::ComputeBoWNon()
+{
+    vector<int> idxMove;
+    int nMove = 0;
+    for(size_t i=0, iend=mvKeys.size(); i<iend;i++)
+    {
+        if (mvKeys[i].mbMovable){
+            nMove ++;
+            idxMove.push_back(i);
+        }
+    }
+    
+    if(mBowVecNon.empty() || mFeatVecNon.empty())
+    {
+        vector<cv::Mat> vCurrentDescNon = Converter::toNonMovableDescriptorVector(mDescriptors, idxMove);
+        mpORBvocabulary->transform(vCurrentDescNon,mBowVecNon,mFeatVecNon,4);
     }
 }
 
@@ -594,7 +614,7 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
             const vector<size_t> vCell = mGrid[ix][iy];
             for(size_t j=0, jend=vCell.size(); j<jend; j++)
             {
-                const cv::KeyPoint &kpUn = mvKeysUn[vCell[j]];
+                const KeyPointLabeled &kpUn = mvKeysUn[vCell[j]];
                 const float distx = kpUn.pt.x-x;
                 const float disty = kpUn.pt.y-y;
 
@@ -663,3 +683,6 @@ float KeyFrame::ComputeSceneMedianDepth(const int q)
 }
 
 } //namespace ORB_SLAM
+
+
+

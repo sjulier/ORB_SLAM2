@@ -416,6 +416,13 @@ int MapPoint::PredictScale(const float &currentDist, Frame* pF)
     return nScale;
 }
 
-
+void MapPoint::SetLabel(int label, bool movable, bool moving)
+{
+    mnLabel = label;
+    mbMovable = movable;
+    mbMoving = moving;
+}
 
 } //namespace ORB_SLAM
+
+

@@ -20,9 +20,9 @@
 #ifndef INITIALIZER_H
 #define INITIALIZER_H
 
-#include<opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 #include "Frame.h"
-
+#include "ORBextractor.h"
 
 namespace ORB_SLAM2
 {
@@ -61,11 +61,11 @@ private:
     bool ReconstructH(vector<bool> &vbMatchesInliers, cv::Mat &H21, cv::Mat &K,
                       cv::Mat &R21, cv::Mat &t21, vector<cv::Point3f> &vP3D, vector<bool> &vbTriangulated, float minParallax, int minTriangulated);
 
-    void Triangulate(const cv::KeyPoint &kp1, const cv::KeyPoint &kp2, const cv::Mat &P1, const cv::Mat &P2, cv::Mat &x3D);
+    void Triangulate(const KeyPointLabeled &kp1, const KeyPointLabeled &kp2, const cv::Mat &P1, const cv::Mat &P2, cv::Mat &x3D);
 
-    void Normalize(const vector<cv::KeyPoint> &vKeys, vector<cv::Point2f> &vNormalizedPoints, cv::Mat &T);
+    void Normalize(const vector<KeyPointLabeled> &vKeys, vector<cv::Point2f> &vNormalizedPoints, cv::Mat &T);
 
-    int CheckRT(const cv::Mat &R, const cv::Mat &t, const vector<cv::KeyPoint> &vKeys1, const vector<cv::KeyPoint> &vKeys2,
+    int CheckRT(const cv::Mat &R, const cv::Mat &t, const vector<KeyPointLabeled> &vKeys1, const vector<KeyPointLabeled> &vKeys2,
                        const vector<Match> &vMatches12, vector<bool> &vbInliers,
                        const cv::Mat &K, vector<cv::Point3f> &vP3D, float th2, vector<bool> &vbGood, float &parallax);
 
@@ -73,10 +73,10 @@ private:
 
 
     // Keypoints from Reference Frame (Frame 1)
-    vector<cv::KeyPoint> mvKeys1;
+    vector<KeyPointLabeled> mvKeys1;
 
     // Keypoints from Current Frame (Frame 2)
-    vector<cv::KeyPoint> mvKeys2;
+    vector<KeyPointLabeled> mvKeys2;
 
     // Current Matches from Reference to Current
     vector<Match> mvMatches12;

@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "KeyFrame.h"
-
+#include "ORBextractor.h"
 
 
 namespace ORB_SLAM2

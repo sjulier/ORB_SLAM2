@@ -28,8 +28,8 @@
 
 #include "ORBmatcher.h"
 
-#include<mutex>
-#include<thread>
+#include <mutex>
+#include <thread>
 
 
 namespace ORB_SLAM2
@@ -122,16 +122,20 @@ bool LoopClosing::DetectLoop()
     // This is the lowest score to a connected keyframe in the covisibility graph
     // We will impose loop candidates to have a higher similarity than this
     const vector<KeyFrame*> vpConnectedKeyFrames = mpCurrentKF->GetVectorCovisibleKeyFrames();
-    const DBoW2::BowVector &CurrentBowVec = mpCurrentKF->mBowVec;
+
+    mpCurrentKF->ComputeBoWNon();
+    const DBoW2::BowVector &CurrentBowVecNon = mpCurrentKF->mBowVecNon;
     float minScore = 1;
     for(size_t i=0; i<vpConnectedKeyFrames.size(); i++)
     {
         KeyFrame* pKF = vpConnectedKeyFrames[i];
         if(pKF->isBad())
             continue;
-        const DBoW2::BowVector &BowVec = pKF->mBowVec;
 
-        float score = mpORBVocabulary->score(CurrentBowVec, BowVec);
+        pKF->ComputeBoWNon();
+        const DBoW2::BowVector &BowVecNon = pKF->mBowVecNon;
+
+        float score = mpORBVocabulary->score(CurrentBowVecNon, BowVecNon);
 
         if(score<minScore)
             minScore = score;
@@ -263,7 +267,9 @@ bool LoopClosing::ComputeSim3()
         }
 
         int nmatches = matcher.SearchByBoW(mpCurrentKF,pKF,vvpMapPointMatches[i]);
-
+        
+        // Not sure if removing movable points is a good idea. 
+        
         if(nmatches<20)
         {
             vbDiscarded[i] = true;

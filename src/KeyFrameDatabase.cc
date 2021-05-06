@@ -83,9 +83,9 @@ vector<KeyFrame*> KeyFrameDatabase::DetectLoopCandidates(KeyFrame* pKF, float mi
     {
         unique_lock<mutex> lock(mMutex);
 
-        for(DBoW2::BowVector::const_iterator vit=pKF->mBowVec.begin(), vend=pKF->mBowVec.end(); vit != vend; vit++)
+        for(DBoW2::BowVector::const_iterator vit=pKF->mBowVecNon.begin(), vend=pKF->mBowVecNon.end(); vit != vend; vit++)
         {
-            list<KeyFrame*> &lKFs =   mvInvertedFile[vit->first];
+            list<KeyFrame*> &lKFs = mvInvertedFile[vit->first];
 
             for(list<KeyFrame*>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
             {
@@ -129,8 +129,9 @@ vector<KeyFrame*> KeyFrameDatabase::DetectLoopCandidates(KeyFrame* pKF, float mi
         if(pKFi->mnLoopWords>minCommonWords)
         {
             nscores++;
-
-            float si = mpVoc->score(pKF->mBowVec,pKFi->mBowVec);
+            
+            pKFi->ComputeBoWNon();
+            float si = mpVoc->score(pKF->mBowVecNon,pKFi->mBowVecNon);
 
             pKFi->mLoopScore = si;
             if(si>=minScore)
